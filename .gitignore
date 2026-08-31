@@ -1,0 +1,18 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Large raw training dataset (pre-trained model.pkl is committed and ready)
+Stravl_Travel_Preference_Data.csv
+
+# System and editor files
+.DS_Store
+.idea/
+.vscode/
+.gemini/

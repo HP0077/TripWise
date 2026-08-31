@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripWise | AI Travel Recommendations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <span class="brand-icon">✈️</span>
+                <span class="brand-name brand-text">TripWise</span>
+            </div>
+            <div class="nav-badge">
+                <span class="pulse-dot"></span> ML Ensemble Recommender
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- 1. Hero Landing Section -->
+        <section id="hero-section" class="hero-card">
+            <div class="hero-badge">AI-Powered Vacation Matcher</div>
+            <h1 class="hero-title">Find Your <span class="hero-title-highlight">Perfect Destination</span></h1>
+            <p class="hero-subtitle">
+                Powered by a trained Machine Learning Ensemble on 80,000+ real traveler preferences. 
+                Tell us your style, budget, and dream vibe — we'll match you to the ideal getaway.
+            </p>
+            
+            <div class="features-row">
+                <div class="feature-item feat-ml">
+                    <div class="feature-icon-wrap">🎯</div>
+                    <div>
+                        <strong>Smart Voting Classifier</strong>
+                        <span>RF + Extra Trees Ensemble</span>
+                    </div>
+                </div>
+                <div class="feature-item feat-globe">
+                    <div class="feature-icon-wrap">🌍</div>
+                    <div>
+                        <strong>Global Coverage</strong>
+                        <span>180+ destinations across 6 continents</span>
+                    </div>
+                </div>
+                <div class="feature-item feat-fast">
+                    <div class="feature-icon-wrap">⚡</div>
+                    <div>
+                        <strong>Instant & Lightweight</strong>
+                        <span>Runs 100% locally on your laptop</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-action">
+                <button id="start-planning-btn" class="cta-btn">
+                    <span>Start Planning Your Trip</span>
+                    <span class="arrow-icon">→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. Preference Form Section -->
+        <section id="form-section" class="form-card hidden">
+            <div class="form-header">
+                <h2>Your Travel Preferences</h2>
+                <p>Customize your criteria to get high-accuracy model predictions.</p>
+            </div>
+
+            <form id="travel-form">
+                
+                <!-- Section A: Logistics -->
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="budget">
+                            <span class="label-icon">💰</span> Budget (Per person / night)
+                        </label>
+                        <select id="budget" name="budget" required class="form-select">
+                            <option value="" disabled selected>Select budget range</option>
+                            <option value="0">$0 - $49 (Budget Friendly)</option>
+                            <option value="1">$50 - $99 (Moderate)</option>
+                            <option value="2">$100 - $249 (Comfort)</option>
+                            <option value="3">$300+ (Luxury / Premium)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="season">
+                            <span class="label-icon">🗓️</span> Travel Season
+                        </label>
+                        <select id="season" name="season" required class="form-select">
+                            <option value="" disabled selected>Select season</option>
+                            <option value="0">❄️ Winter</option>
+                            <option value="1">🌸 Spring</option>
+                            <option value="2">☀️ Summer</option>
+                            <option value="3">🍂 Fall</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section B: Pace & Safety -->
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="activity">
+                            <span class="label-icon">🏃</span> Activity & Pace
+                        </label>
+                        <select id="activity" name="activity" required class="form-select">
+                            <option value="" disabled selected>Select activity level</option>
+                            <option value="0">Chill & Relaxed</option>
+                            <option value="1">Balanced Pace</option>
+                            <option value="2">Active & Adventurous</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="safety">
+                            <span class="label-icon">🛡️</span> Safety Preference
+                        </label>
+                        <select id="safety" name="safety" required class="form-select">
+                            <option value="" disabled selected>Select safety priority</option>
+                            <option value="0">Very Safety Conscious</option>
+                            <option value="1">Balanced Comfort</option>
+                            <option value="2">Ready for Anything / Adventurous</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section C: Experiences -->
+                <div class="form-group">
+                    <label>
+                        <span class="label-icon">✨</span> Desired Experiences <span class="sub-label">(Select all that apply)</span>
+                    </label>
+                    <div class="chips-grid chips-experiences">
+                        <label class="chip"><input type="checkbox" name="experiences" value="0"><span>🏖️ Beach</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="1"><span>🧗 Adventure</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="2"><span>🌲 Nature</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="3"><span>🏛️ Culture</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="4"><span>🎉 Nightlife</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="5"><span>📜 History</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="6"><span>🛍️ Shopping</span></label>
+                        <label class="chip"><input type="checkbox" name="experiences" value="7"><span>🍜 Cuisine</span></label>
+                    </div>
+                </div>
+
+                <!-- Section D: Scenery -->
+                <div class="form-group">
+                    <label>
+                        <span class="label-icon">🌄</span> Scenery & Landscape <span class="sub-label">(Select all that apply)</span>
+                    </label>
+                    <div class="chips-grid chips-scenery">
+                        <label class="chip"><input type="checkbox" name="scenery" value="0"><span>🏙️ Urban</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="1"><span>🌾 Rural</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="2"><span>🌊 Coast & Sea</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="3"><span>⛰️ Mountain</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="4"><span>⛵ Lake</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="5"><span>🏜️ Desert</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="6"><span>🌿 Plains</span></label>
+                        <label class="chip"><input type="checkbox" name="scenery" value="7"><span>🌴 Jungle</span></label>
+                    </div>
+                </div>
+
+                <!-- Section E: Region -->
+                <div class="form-group">
+                    <label>
+                        <span class="label-icon">📍</span> Preferred Continents <span class="sub-label">(Optional - leave unselected for anywhere)</span>
+                    </label>
+                    <div class="chips-grid chips-regions">
+                        <label class="chip"><input type="checkbox" name="region" value="a"><span>🌏 Asia</span></label>
+                        <label class="chip"><input type="checkbox" name="region" value="e"><span>🏰 Europe</span></label>
+                        <label class="chip"><input type="checkbox" name="region" value="n"><span>🗽 North America</span></label>
+                        <label class="chip"><input type="checkbox" name="region" value="s"><span>💃 South America</span></label>
+                        <label class="chip"><input type="checkbox" name="region" value="f"><span>🦁 Africa</span></label>
+                        <label class="chip"><input type="checkbox" name="region" value="o"><span>🦘 Oceania</span></label>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button type="button" id="back-to-landing-btn" class="secondary-btn">← Back</button>
+                    <button type="submit" id="submit-btn" class="primary-btn">
+                        <span>Find Matching Destinations</span>
+                        <div class="btn-spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3. Results Section -->
+        <section id="results-section" class="results-card hidden">
+            <div class="results-top-bar">
+                <div>
+                    <span class="match-pill">✨ ML Prediction Results</span>
+                    <h2 class="results-title">Your Top Recommended Destinations</h2>
+                </div>
+                <button id="modify-preferences-btn" class="secondary-btn">
+                    <span>⚙️ Modify Preferences</span>
+                </button>
+            </div>
+
+            <!-- Dynamic Choices Summary Banner -->
+            <div class="summary-banner">
+                <span class="summary-icon">📋</span>
+                <p id="results-summary" class="summary-text"></p>
+            </div>
+
+            <!-- Destinations Grid -->
+            <div id="destinations-container" class="destinations-grid">
+                <!-- Injected dynamically via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
