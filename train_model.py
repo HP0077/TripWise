@@ -6,6 +6,7 @@
 
 import os
 import ast
+import json
 import pandas as pd
 import numpy as np
 import joblib
@@ -13,7 +14,6 @@ import pycountry_convert as pc
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, VotingClassifier
-from sklearn.metrics import accuracy_score
 
 
 def parse_string_list(text_value):
@@ -59,9 +59,13 @@ def get_region_code(destination_full_name):
         return 'e'
 
 
-def main():
+def build_dataset(csv_path='Stravl_Travel_Preference_Data.csv'):
+    """
+    Loads the Stravl dataset and returns (X, y, user_ids, encoders, selected_destinations).
+    Each row is one (user, liked destination) pair, so user_ids is kept for group-aware splitting.
+    """
     print("Loading Stravl Travel Preference Dataset...")
-    df = pd.read_csv('Stravl_Travel_Preference_Data.csv')
+    df = pd.read_csv(csv_path)
 
     with open('destination_ids.txt', 'r', encoding='utf-8') as f:
         all_dest_names = [line.strip() for line in f]
@@ -110,11 +114,11 @@ def main():
     y = data['yes_swipes']
 
     print(f"Feature matrix shape: {X.shape}, Number of classes: {y.nunique()}")
+    return X, y, data['id'], encoders, selected_destinations
 
-    # Step 4: Train Ensemble Voting Classifier
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
 
-    print("Training Balanced Random Forest & Extra Trees Ensemble...")
+def build_ensemble():
+    """Balanced Random Forest + Extra Trees soft-voting ensemble used by the app."""
     rf_model = RandomForestClassifier(
         n_estimators=40,
         max_depth=10,
@@ -133,11 +137,20 @@ def main():
         n_jobs=-1
     )
 
-    ensemble_model = VotingClassifier(
+    return VotingClassifier(
         estimators=[('rf', rf_model), ('et', et_model)],
         voting='soft'
     )
 
+
+def main():
+    X, y, _, encoders, selected_destinations = build_dataset()
+
+    # Step 4: Train Ensemble Voting Classifier
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
+
+    print("Training Balanced Random Forest & Extra Trees Ensemble...")
+    ensemble_model = build_ensemble()
     ensemble_model.fit(X_train, y_train)
 
     # Step 5: Save Compressed Model Artifacts for Render
@@ -146,6 +159,13 @@ def main():
     joblib.dump(encoders, 'mlb_encoders.pkl')
     joblib.dump(X.columns.tolist(), 'feature_columns.pkl')
     joblib.dump(selected_destinations, 'top_dests.pkl')
+
+    # Continent per destination, so the web app can filter without pycountry at runtime
+    with open('destination_ids.txt', 'r', encoding='utf-8') as f:
+        all_dest_names = [line.strip() for line in f]
+    continents = {str(int(d)): get_region_code(all_dest_names[d]) for d in selected_destinations}
+    with open('destination_continents.json', 'w', encoding='utf-8') as f:
+        json.dump(continents, f, indent=0, sort_keys=True)
 
     model_size_mb = os.path.getsize('model.pkl') / (1024 * 1024)
     print(f"Training complete! model.pkl size: {model_size_mb:.2f} MB (Ready for GitHub & Render).")

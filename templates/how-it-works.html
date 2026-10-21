@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How it works · TripWise</title>
+    <meta name="description" content="The data, features, tree models and evaluation behind TripWise's destination recommendations.">
+    <meta property="og:title" content="How TripWise picks your six places">
+    <meta property="og:description" content="A Random Forest and an Extra Trees model vote on 225 destinations. Here's the data, the method and how well it works.">
+    <meta property="og:type" content="article">
+    <meta name="theme-color" content="#0e1a26">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/how-it-works.css') }}">
+    <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+    {% set m = metrics.user_level %}
+    {% set hit10 = m.tripwise_ensemble['hit_rate@10'] * 100 %}
+
+    <header class="masthead">
+        <a href="/" class="wordmark">TripWise</a>
+        <nav class="masthead-nav">
+            <a href="/" class="masthead-link">Plan a trip</a>
+            <a href="/how-it-works" class="masthead-link" aria-current="page">How it works</a>
+            <button type="button" class="theme-toggle" id="theme-toggle">Light</button>
+        </nav>
+    </header>
+
+    <main class="page">
+        <section class="intro">
+            <h1>How TripWise picks your six places</h1>
+            <p>
+                The data, the two tree models that vote on every request, and an honest look at how well it works.
+                Each section starts with the short version. Open the details if you want the rest.
+            </p>
+        </section>
+
+        <div class="doc">
+            <nav class="toc" aria-label="On this page">
+                <ol>
+                    <li><a href="#pipeline">The pipeline</a></li>
+                    <li><a href="#data">The data</a></li>
+                    <li><a href="#features">Answers into numbers</a></li>
+                    <li><a href="#models">Two forests, one vote</a></li>
+                    <li><a href="#results">How well it works</a></li>
+                    <li><a href="#importance">Which answers matter</a></li>
+                    <li><a href="#limits">Limits</a></li>
+                    <li><a href="#stack">Built with</a></li>
+                </ol>
+            </nav>
+
+            <article class="chapters">
+
+                <!-- 01 Pipeline -->
+                <section id="pipeline" class="chapter" data-reveal>
+                    <h2><span class="q-num">01</span> From eight answers to six places</h2>
+                    <p class="lede">
+                        Every time you press <em>Show my shortlist</em>, your answers go through six steps on the server.
+                        The whole trip takes about {{ metrics.inference_ms_median|round|int }} milliseconds. Pick a step to see what happens there.
+                    </p>
+
+                    <div class="pipeline">
+                        <div class="pipeline-stations" role="tablist" aria-label="Pipeline steps">
+                            <div class="pipeline-track" aria-hidden="true"><span></span></div>
+                            {% set stations = [
+                                ('Your answers', '8 questions'),
+                                ('29 numbers', 'the feature vector'),
+                                ('80 trees', 'score 225 places'),
+                                ('One vote', 'average the odds'),
+                                ('Continent filter', 'if you picked any'),
+                                ('Top six', 'your shortlist')
+                            ] %}
+                            {% for title, sub in stations %}
+                            <button class="station" role="tab" id="station-{{ loop.index }}" aria-controls="station-panel"
+                                    aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}"
+                                    style="--i: {{ loop.index0 }}" data-step="{{ loop.index0 }}">
+                                <span class="station-dot"></span>
+                                <span class="station-title">{{ title }}</span>
+                                <span class="station-sub">{{ sub }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <div class="station-panel" id="station-panel" role="tabpanel" aria-live="polite">
+                            <template data-step="0">
+                                <p>Five questions take one answer each (budget, season, pace, safety, popularity). Three take any number of answers (experiences, scenery, continents). The browser sends them as JSON to <code>POST /predict</code>, and the server checks every value before using it.</p>
+                            </template>
+                            <template data-step="1">
+                                <p>The answers become exactly the 29 columns the model was trained on. Single answers become a number. Multi-choice answers become a row of 0s and 1s. In the code this is <code>build_input_vector()</code> in <code>app.py</code>.</p>
+                            </template>
+                            <template data-step="2">
+                                <p>40 Random Forest trees and 40 Extra Trees trees each estimate how likely someone with your answers is to say yes to each of the 225 destinations.</p>
+                            </template>
+                            <template data-step="3">
+                                <p>The two models' probabilities are averaged. This is called soft voting (<code>VotingClassifier(voting='soft')</code> in scikit-learn). Every destination ends up with one probability, and all 225 add up to 1.</p>
+                            </template>
+                            <template data-step="4">
+                                <p>If you picked continents, every destination outside them is removed. Each place's continent comes from its country name via <code>pycountry-convert</code>. The filter runs after the model, so it never changes how places rank against each other.</p>
+                            </template>
+                            <template data-step="5">
+                                <p>The six highest probabilities make your list. The bar on each result shows its probability relative to your top pick, which is always 100. Photos and links come from a Wikipedia search, run in your browser.</p>
+                            </template>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 02 Data -->
+                <section id="data" class="chapter" data-reveal>
+                    <h2><span class="q-num">02</span> Where the training data comes from</h2>
+                    <p class="lede">
+                        The <a href="https://github.com/Stravl/Stravl-Data">Stravl Travel Preference Dataset</a> holds
+                        80,301 survey responses. Each person answered the same questionnaire you just did, then swiped
+                        yes or no on destinations. TripWise learns which answers go with which yes-swipes.
+                    </p>
+
+                    <dl class="figures">
+                        <div><dt>Survey responses</dt><dd>80,301</dd></div>
+                        <div><dt>Destinations in the survey</dt><dd>{{ "{:,}".format(facts.survey_destinations) }}</dd></div>
+                        <div><dt>Kept for the model</dt><dd>{{ facts.model_destinations }}</dd></div>
+                        <div><dt>Yes-swipes used to train</dt><dd>112,321</dd></div>
+                    </dl>
+
+                    <figure class="dotmap" aria-labelledby="dotmap-caption">
+                        {% set ns = namespace(i=0) %}
+                        {% for continent, count in facts.continent_counts.items() %}
+                        <div class="dot-group">
+                            <div class="dot-label"><span>{{ continent }}</span><span class="dot-count">{{ count }}</span></div>
+                            <div class="dots" aria-hidden="true">
+                                {% for _ in range(count) %}<i style="--i: {{ ns.i }}"></i>{% set ns.i = ns.i + 1 %}{% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <figcaption id="dotmap-caption">The {{ facts.model_destinations }} destinations the model can recommend, one dot each.</figcaption>
+                    </figure>
+
+                    <details>
+                        <summary>How the 225 were chosen</summary>
+                        <div class="details-body">
+                            <p>Every yes-swipe becomes one training row: the person's answers are the inputs and the destination is the label. A person who liked five places gives five rows.</p>
+                            <p>Places need at least 15 yes-swipes to stay in. Within each continent the most-swiped ones are kept: 45 each for Europe, Asia and North America, and 30 each for South America, Africa and Oceania.</p>
+                            <p>The cap matters. Without it, European and US cities would take most of the list, and the model would rarely recommend anywhere else.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- 03 Features -->
+                <section id="features" class="chapter" data-reveal>
+                    <h2><span class="q-num">03</span> Turning answers into numbers</h2>
+                    <p class="lede">
+                        Trees can only split on numbers, so each questionnaire becomes a row of {{ facts.feature_columns|length }} numbers.
+                        Pick an example traveller and watch the row change. Hover a cell to see what it means.
+                    </p>
+
+                    <div class="encoder">
+                        <div class="options encoder-presets" role="radiogroup" aria-label="Example travellers">
+                            <label class="option"><input type="radio" name="preset" value="beach" checked><span>Summer beach and food</span></label>
+                            <label class="option"><input type="radio" name="preset" value="city"><span>Spring city nights in Europe</span></label>
+                            <label class="option"><input type="radio" name="preset" value="trek"><span>Autumn trek, off the map</span></label>
+                        </div>
+
+                        <div class="vector" id="vector" data-columns='{{ facts.feature_columns|tojson }}'></div>
+                        <p class="vector-readout" id="vector-readout" aria-live="polite">Hover or tap a cell.</p>
+                    </div>
+
+                    <details>
+                        <summary>Why it's encoded this way</summary>
+                        <div class="details-body">
+                            <p><strong>Pick-one answers stay as a single number</strong> (budget 0 to 3, season 0 to 3, and so on). Budget and pace are ordered scales, so a split like "budget is 2 or more" means something. A skipped answer is stored as −1.</p>
+                            <p><strong>Pick-any answers become one 0-or-1 column per option</strong> (multi-hot encoding with scikit-learn's <code>MultiLabelBinarizer</code>). Ticking Beach and Food sets two of the eight experience columns to 1.</p>
+                            <p>The continent group has eight columns, not six. The survey also offered Caribbean and Middle East, so the model knows those columns, but this site doesn't ask about them.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- 04 Models -->
+                <section id="models" class="chapter" data-reveal>
+                    <h2><span class="q-num">04</span> Two forests, one vote</h2>
+                    <p class="lede">
+                        Both models are collections of decision trees. A decision tree asks yes/no questions about your
+                        answers until it reaches a leaf, and the leaf holds odds for all 225 places. The two models
+                        differ in how they grow their trees. TripWise averages what they say.
+                    </p>
+
+                    <div class="forests">
+                        <figure class="forest">
+                            <svg viewBox="0 0 300 170" class="tree" role="img" aria-label="Sketch of a Random Forest tree splitting on the best cut points">
+                                <path class="branch" d="M150 34 L80 86 M150 34 L220 86 M80 104 L45 146 M80 104 L115 146 M220 104 L185 146 M220 104 L255 146"/>
+                                <g class="node" style="--d:0"><rect x="95" y="14" width="110" height="24" rx="6"/><text x="150" y="30">budget ≥ 2?</text></g>
+                                <g class="node" style="--d:1"><rect x="30" y="84" width="100" height="24" rx="6"/><text x="80" y="100">sea view?</text></g>
+                                <g class="node" style="--d:1"><rect x="165" y="84" width="110" height="24" rx="6"/><text x="220" y="100">popularity ≥ 1?</text></g>
+                                <g class="leaf" style="--d:2"><circle cx="45" cy="152" r="6"/><circle cx="115" cy="152" r="6"/><circle cx="185" cy="152" r="6"/><circle cx="255" cy="152" r="6"/></g>
+                            </svg>
+                            <figcaption>
+                                <h3>Random Forest</h3>
+                                <p>Each tree trains on a random resample of the rows. At every split it looks at about 5 random columns and picks the <strong>best</strong> cut point.</p>
+                            </figcaption>
+                        </figure>
+
+                        <figure class="forest">
+                            <svg viewBox="0 0 300 170" class="tree" role="img" aria-label="Sketch of an Extra Trees tree splitting on random cut points">
+                                <path class="branch" d="M150 34 L80 86 M150 34 L220 86 M80 104 L45 146 M80 104 L115 146 M220 104 L185 146 M220 104 L255 146"/>
+                                <g class="node" style="--d:0"><rect x="95" y="14" width="110" height="24" rx="6"/><text x="150" y="30">budget ≥ 1.3?</text></g>
+                                <g class="node" style="--d:1"><rect x="30" y="84" width="100" height="24" rx="6"/><text x="80" y="100">sea view?</text></g>
+                                <g class="node" style="--d:1"><rect x="165" y="84" width="110" height="24" rx="6"/><text x="220" y="100">safety ≥ 0.6?</text></g>
+                                <g class="leaf" style="--d:2"><circle cx="45" cy="152" r="6"/><circle cx="115" cy="152" r="6"/><circle cx="185" cy="152" r="6"/><circle cx="255" cy="152" r="6"/></g>
+                            </svg>
+                            <figcaption>
+                                <h3>Extra Trees</h3>
+                                <p>Each tree trains on all rows. At every split it draws a <strong>random</strong> cut point for each candidate column and keeps the best of those. That makes the trees more varied and quicker to train.</p>
+                            </figcaption>
+                        </figure>
+                    </div>
+                    <p class="sketch-note">Sketches, not the real trees. The real ones are up to 10 levels deep.</p>
+
+                    <h3 class="sub-heading">The vote, on a real example</h3>
+                    <p>
+                        This is the shipped model's output for a summer trip: $100–249 a night, classic spots, beach and food, sea views.
+                        Each model gives a probability for each place, and the final score is the average of the two.
+                    </p>
+
+                    <div class="vote" role="table" aria-label="Probabilities from each model for the top three places">
+                        <div class="vote-head" role="row">
+                            <span role="columnheader">Destination</span>
+                            <span role="columnheader">Random Forest</span>
+                            <span role="columnheader">Extra Trees</span>
+                            <span role="columnheader">Vote</span>
+                        </div>
+                        {% set vmax = facts.example_vote | map(attribute='rf') | max %}
+                        {% for row in facts.example_vote %}
+                        <div class="vote-row" role="row" style="--r: {{ loop.index0 }}">
+                            <span role="rowheader" class="vote-name">{{ row.name.split(',')[0] }}</span>
+                            {% for key in ['rf', 'et', 'vote'] %}
+                            <span role="cell" class="vote-cell {{ 'is-vote' if key == 'vote' }}">
+                                <span class="vote-bar"><span style="--w: {{ (row[key] / vmax * 100)|round(1) }}%"></span></span>
+                                <span class="vote-value">{{ "%.2f"|format(row[key]) }}%</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p class="note">
+                        The numbers are small because the odds are spread over 225 places. Picking at random gives each one 0.44%,
+                        so the top pick here is about twice as likely as chance.
+                    </p>
+
+                    <details>
+                        <summary>Model settings and why</summary>
+                        <div class="details-body">
+                            <table class="spec">
+                                <tbody>
+                                    <tr><th scope="row">Trees</th><td>40 Random Forest + 40 Extra Trees</td></tr>
+                                    <tr><th scope="row">Max depth</th><td>10</td></tr>
+                                    <tr><th scope="row">Min samples per leaf</th><td>4</td></tr>
+                                    <tr><th scope="row">Columns tried per split</th><td>√29 ≈ 5 (scikit-learn default)</td></tr>
+                                    <tr><th scope="row">Class weights</th><td>Balanced</td></tr>
+                                    <tr><th scope="row">Voting</th><td>Soft (average probabilities)</td></tr>
+                                    <tr><th scope="row">Saved model size</th><td>{{ facts.model_size_mb }} MB compressed</td></tr>
+                                </tbody>
+                            </table>
+                            <p><strong>Balanced class weights</strong> make a yes-swipe on a rarely swiped place count for more than one on a popular place. Without them the model drifts towards the same famous cities for everyone.</p>
+                            <p><strong>Depth, leaf size and tree count</strong> were set by hand, not by a search. They keep the saved model small enough for GitHub and a free Render server, and fast enough to answer in milliseconds. Deeper trees would mostly memorise individual travellers.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- 05 Results -->
+                <section id="results" class="chapter" data-reveal>
+                    <h2><span class="q-num">05</span> How well it works</h2>
+                    <p class="lede">
+                        The test set is {{ "{:,}".format(metrics.n_test_users) }} travellers the model never saw while training.
+                        For {{ "%.1f"|format(hit10) }}% of them, at least one of their top ten suggestions was a place they actually swiped yes on.
+                        Recommending the most popular places to everyone gets {{ "%.1f"|format(m.popularity_baseline['hit_rate@10'] * 100) }}%.
+                    </p>
+
+                    <div class="chart" id="results-chart">
+                        <div class="chart-controls options" role="radiogroup" aria-label="Number of suggestions">
+                            <label class="option"><input type="radio" name="k" value="1"><span>Top 1</span></label>
+                            <label class="option"><input type="radio" name="k" value="5"><span>Top 5</span></label>
+                            <label class="option"><input type="radio" name="k" value="10" checked><span>Top 10</span></label>
+                        </div>
+                        <p class="chart-title" id="results-chart-title">Share of travellers with at least one yes in their top 10</p>
+                        <div class="bars" id="results-bars"></div>
+                        <p class="chart-key"><span class="key-band"></span> 95% margin of error around TripWise's score</p>
+                    </div>
+
+                    <p class="callout">
+                        <strong>The vote is no better than either model alone.</strong>
+                        Random Forest alone, Extra Trees alone and the ensemble all land inside the same margin of error.
+                        Combining them didn't add accuracy on this data, but it doesn't cost any either.
+                    </p>
+
+                    <details>
+                        <summary>Why the test set is split by traveller</summary>
+                        <div class="details-body">
+                            <p>One traveller contributes a row for every place they liked, and every one of those rows has the same answers. With a random row-by-row split, the same person ends up in both training and test, and the model gets graded on people it has already seen.</p>
+                            <p><code>evaluate.py</code> uses scikit-learn's <code>GroupShuffleSplit</code> to hold out 10% of travellers completely. It trains the same model on the other 90% and ranks all 225 places for each held-out traveller.</p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Every metric, and what it means</summary>
+                        <div class="details-body">
+                            <table class="metric-table">
+                                <thead>
+                                    <tr><th scope="col">Per traveller</th><th scope="col">TripWise</th><th scope="col">RF alone</th><th scope="col">ET alone</th><th scope="col">Most popular</th><th scope="col">Random</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, label in [('hit_rate@1', 'Hit rate @1'), ('hit_rate@5', 'Hit rate @5'), ('hit_rate@10', 'Hit rate @10'),
+                                                          ('precision@5', 'Precision @5'), ('precision@10', 'Precision @10'),
+                                                          ('recall@5', 'Recall @5'), ('recall@10', 'Recall @10'),
+                                                          ('f1@5', 'F1 @5'), ('f1@10', 'F1 @10'),
+                                                          ('mrr', 'MRR'), ('ndcg@10', 'NDCG @10')] %}
+                                    <tr>
+                                        <th scope="row">{{ label }}</th>
+                                        {% for model_key in ['tripwise_ensemble', 'rf_only', 'et_only', 'popularity_baseline', 'random_baseline'] %}
+                                        <td>{{ "%.3f"|format(m[model_key][key]) }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            {% set r = metrics.row_level %}
+                            <table class="metric-table">
+                                <thead>
+                                    <tr><th scope="col">Per liked place (225-class)</th><th scope="col">TripWise</th><th scope="col">RF alone</th><th scope="col">ET alone</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, label in [('top1_accuracy', 'Accuracy (top 1)'), ('top5_accuracy', 'Top-5 accuracy'), ('top10_accuracy', 'Top-10 accuracy'),
+                                                          ('balanced_accuracy', 'Balanced accuracy'),
+                                                          ('precision_macro', 'Precision (macro)'), ('recall_macro', 'Recall (macro)'), ('f1_macro', 'F1 (macro)'),
+                                                          ('precision_weighted', 'Precision (weighted)'), ('recall_weighted', 'Recall (weighted)'), ('f1_weighted', 'F1 (weighted)'),
+                                                          ('log_loss', 'Log loss (lower is better)')] %}
+                                    <tr>
+                                        <th scope="row">{{ label }}</th>
+                                        {% for model_key in ['tripwise_ensemble', 'rf_only', 'et_only'] %}
+                                        <td>{{ "%.3f"|format(r[model_key][key]) }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <dl class="glossary">
+                                <dt>Hit rate @k</dt><dd>Share of travellers with at least one yes among their top k suggestions.</dd>
+                                <dt>Precision @k</dt><dd>Of the k suggestions, the share that were yeses.</dd>
+                                <dt>Recall @k</dt><dd>Of the places a traveller liked, the share that made their top k.</dd>
+                                <dt>F1 @k</dt><dd>The balance (harmonic mean) of precision and recall at k.</dd>
+                                <dt>MRR</dt><dd>One divided by the position of the first yes, averaged over travellers. 1.0 means the top pick was always a yes.</dd>
+                                <dt>NDCG @10</dt><dd>Rewards yeses near the top of the list more than yeses further down. 1.0 is a perfect ordering.</dd>
+                                <dt>Accuracy, F1 (macro and weighted)</dt><dd>Standard classification scores where each liked place is one test row with 225 possible answers. Random guessing gets 0.004 accuracy. Macro averages every destination equally, and weighted averages by how often each one appears.</dd>
+                                <dt>Log loss</dt><dd>How confident the model was in the right answer. Guessing evenly across all 225 places scores 5.42.</dd>
+                            </dl>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- 06 Importance -->
+                <section id="importance" class="chapter" data-reveal>
+                    <h2><span class="q-num">06</span> Which answers actually matter</h2>
+                    <p class="lede">
+                        To test a question, its answers were shuffled between test travellers and hit rate @10 measured again.
+                        A big drop means the model relies on that question. Four questions matter. The other four make no measurable difference.
+                    </p>
+
+                    <div class="chart" id="importance-chart">
+                        <p class="chart-title">Drop in hit rate @10 when a question's answers are shuffled (percentage points)</p>
+                        <div class="bars bars-importance" id="importance-bars"
+                             data-importance='{{ metrics.question_importance|tojson }}'></div>
+                        <p class="chart-key"><span class="key-whisker"></span> Spread over 5 shuffles (±2 standard deviations). Grey bars sit within noise of zero.</p>
+                    </div>
+
+                    <p>
+                        Continent matters most, partly because it narrows the field so much. Popularity and budget come next.
+                        Shuffling pace, safety, experiences or season doesn't measurably change the results. In this data, how much people want to spend
+                        and how far off the map they want to go say more about where they'll go than what they want to do there.
+                    </p>
+                </section>
+
+                <!-- 07 Limits -->
+                <section id="limits" class="chapter" data-reveal>
+                    <h2><span class="q-num">07</span> Limits worth knowing</h2>
+                    <ul class="limits">
+                        <li><strong>Taste is noisy.</strong> The top pick was a place the traveller liked only {{ "%.1f"|format(m.tripwise_ensemble['hit_rate@1'] * 100) }}% of the time. Treat the list as a starting point, not a verdict.</li>
+                        <li><strong>225 of {{ "{:,}".format(facts.survey_destinations) }} places.</strong> Destinations with few swipes were left out, so some great places can never come up.</li>
+                        <li><strong>The continent filter comes after the model.</strong> Caribbean islands count as North America and the Middle East counts as Asia, following the country lookup.</li>
+                        <li><strong>Photos come from a Wikipedia search.</strong> Usually right, but occasionally a city shares a name with somewhere else.</li>
+                        <li><strong>The survey reflects Stravl's users.</strong> Their tastes won't match everyone's.</li>
+                    </ul>
+                </section>
+
+                <!-- 08 Stack -->
+                <section id="stack" class="chapter" data-reveal>
+                    <h2><span class="q-num">08</span> Built with</h2>
+                    <dl class="stack">
+                        <div><dt>Model</dt><dd>scikit-learn: <code>RandomForestClassifier</code>, <code>ExtraTreesClassifier</code>, <code>VotingClassifier</code></dd></div>
+                        <div><dt>Data prep</dt><dd>pandas, <code>MultiLabelBinarizer</code>, joblib for saving the model</dd></div>
+                        <div><dt>Server</dt><dd>Flask, served by gunicorn on Render</dd></div>
+                        <div><dt>Front end</dt><dd>Plain HTML, CSS and JavaScript. No framework or build step.</dd></div>
+                        <div><dt>Photos</dt><dd>Wikipedia API, called from the browser</dd></div>
+                        <div><dt>Type</dt><dd>Fraunces and IBM Plex Sans</dd></div>
+                    </dl>
+                    <p class="closing"><a href="/" class="button">Try it with your own answers</a></p>
+                </section>
+            </article>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Built by Huzaifa Pathan with Flask and scikit-learn. Survey data from Stravl.</p>
+    </footer>
+
+    <div class="tooltip" id="tooltip" role="status" hidden></div>
+    <script id="metrics-data" type="application/json">{{ metrics|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/how-it-works.js') }}"></script>
+</body>
+</html>

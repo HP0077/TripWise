@@ -1,8 +1,6 @@
+# Runtime dependencies (what Vercel / Render install)
 Flask>=3.0.0
 gunicorn>=21.2.0
-pandas>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
+numpy>=2.0.0,<3
+scikit-learn==1.8.0  # must match the version model.pkl was saved with
 joblib>=1.3.0
-pycountry-convert>=0.7.2
-requests>=2.31.0

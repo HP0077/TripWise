@@ -4,15 +4,31 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.pytest_cache/
+
+# Virtual environments
 env/
 venv/
+.venv/
 ENV/
 
-# Large raw training dataset (pre-trained model.pkl is committed and ready)
+# Environment variables / secrets (none are needed, but never commit them)
+.env
+.env.*
+
+# Raw training dataset: download it from https://github.com/Stravl/Stravl-Data
 Stravl_Travel_Preference_Data.csv
+
+# Local archives
+*.zip
+
+# Vercel CLI local state
+.vercel/
 
 # System and editor files
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
 .gemini/
+.claude/

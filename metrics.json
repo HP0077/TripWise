@@ -1,0 +1,171 @@
+{
+  "split": "GroupShuffleSplit by user id, 90% train / 10% test",
+  "n_destinations": 225,
+  "n_features": 29,
+  "n_train_rows": 101089,
+  "n_test_rows": 11232,
+  "n_test_users": 3883,
+  "train_seconds": 1.9,
+  "inference_ms_median": 35.3,
+  "row_level": {
+    "tripwise_ensemble": {
+      "top1_accuracy": 0.0249,
+      "top5_accuracy": 0.1116,
+      "top10_accuracy": 0.1871,
+      "balanced_accuracy": 0.0247,
+      "precision_macro": 0.0183,
+      "recall_macro": 0.0247,
+      "f1_macro": 0.0167,
+      "precision_weighted": 0.0227,
+      "recall_weighted": 0.0249,
+      "f1_weighted": 0.0191,
+      "log_loss": 5.0443
+    },
+    "rf_only": {
+      "top1_accuracy": 0.0256,
+      "top5_accuracy": 0.1113,
+      "top10_accuracy": 0.1855,
+      "balanced_accuracy": 0.0258,
+      "precision_macro": 0.025,
+      "recall_macro": 0.0258,
+      "f1_macro": 0.0179,
+      "precision_weighted": 0.0332,
+      "recall_weighted": 0.0256,
+      "f1_weighted": 0.0206,
+      "log_loss": 5.0739
+    },
+    "et_only": {
+      "top1_accuracy": 0.0259,
+      "top5_accuracy": 0.1109,
+      "top10_accuracy": 0.1862,
+      "balanced_accuracy": 0.0255,
+      "precision_macro": 0.0172,
+      "recall_macro": 0.0255,
+      "f1_macro": 0.0163,
+      "precision_weighted": 0.021,
+      "recall_weighted": 0.0259,
+      "f1_weighted": 0.0187,
+      "log_loss": 5.086
+    },
+    "chance_level": {
+      "top1_accuracy": 0.0044,
+      "always_most_popular_accuracy": 0.0163
+    }
+  },
+  "user_level": {
+    "tripwise_ensemble": {
+      "hit_rate@1": 0.0719,
+      "hit_rate@5": 0.196,
+      "hit_rate@10": 0.2637,
+      "precision@1": 0.0719,
+      "precision@5": 0.0643,
+      "precision@10": 0.0538,
+      "recall@1": 0.0238,
+      "recall@5": 0.1037,
+      "recall@10": 0.1706,
+      "f1@1": 0.0335,
+      "f1@5": 0.0733,
+      "f1@10": 0.0767,
+      "mrr": 0.144,
+      "ndcg@10": 0.1185
+    },
+    "popularity_baseline": {
+      "hit_rate@1": 0.0471,
+      "hit_rate@5": 0.1396,
+      "hit_rate@10": 0.2065,
+      "precision@1": 0.0471,
+      "precision@5": 0.0362,
+      "precision@10": 0.0332,
+      "recall@1": 0.0142,
+      "recall@5": 0.0599,
+      "recall@10": 0.1064,
+      "f1@1": 0.0207,
+      "f1@5": 0.0414,
+      "f1@10": 0.0473,
+      "mrr": 0.1103,
+      "ndcg@10": 0.0716
+    },
+    "random_baseline": {
+      "hit_rate@1": 0.0118,
+      "hit_rate@5": 0.0541,
+      "hit_rate@10": 0.1164,
+      "precision@1": 0.0118,
+      "precision@5": 0.0116,
+      "precision@10": 0.0129,
+      "recall@1": 0.0045,
+      "recall@5": 0.0208,
+      "recall@10": 0.0451,
+      "f1@1": 0.0059,
+      "f1@5": 0.0131,
+      "f1@10": 0.0181,
+      "mrr": 0.0526,
+      "ndcg@10": 0.0269
+    },
+    "rf_only": {
+      "hit_rate@1": 0.0739,
+      "hit_rate@5": 0.1942,
+      "hit_rate@10": 0.2624,
+      "precision@1": 0.0739,
+      "precision@5": 0.0641,
+      "precision@10": 0.0533,
+      "recall@1": 0.0241,
+      "recall@5": 0.1044,
+      "recall@10": 0.1694,
+      "f1@1": 0.034,
+      "f1@5": 0.0734,
+      "f1@10": 0.076,
+      "mrr": 0.1443,
+      "ndcg@10": 0.1178
+    },
+    "et_only": {
+      "hit_rate@1": 0.0749,
+      "hit_rate@5": 0.1965,
+      "hit_rate@10": 0.2658,
+      "precision@1": 0.0749,
+      "precision@5": 0.0641,
+      "precision@10": 0.0533,
+      "recall@1": 0.0249,
+      "recall@5": 0.1029,
+      "recall@10": 0.169,
+      "f1@1": 0.035,
+      "f1@5": 0.0732,
+      "f1@10": 0.0761,
+      "mrr": 0.1461,
+      "ndcg@10": 0.1185
+    }
+  },
+  "question_importance": {
+    "region": {
+      "drop": 0.069,
+      "std": 0.0028
+    },
+    "popularity": {
+      "drop": 0.0314,
+      "std": 0.0033
+    },
+    "budget": {
+      "drop": 0.0241,
+      "std": 0.0027
+    },
+    "scenery": {
+      "drop": 0.0095,
+      "std": 0.0025
+    },
+    "activity": {
+      "drop": -0.0001,
+      "std": 0.0017
+    },
+    "safety": {
+      "drop": -0.0015,
+      "std": 0.0018
+    },
+    "season": {
+      "drop": -0.0031,
+      "std": 0.0027
+    },
+    "experiences": {
+      "drop": -0.0033,
+      "std": 0.0031
+    }
+  }
+}

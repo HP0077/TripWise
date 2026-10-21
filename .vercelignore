@@ -1,0 +1,11 @@
+# Never upload these with `vercel deploy`
+*.csv
+*.zip
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+.vscode/
+.idea/
+tests/
+docs/

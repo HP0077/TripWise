@@ -3,220 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripWise | AI Travel Recommendations</title>
+    <title>TripWise · Destination recommender</title>
+    <meta name="description" content="Answer eight questions about budget, season and pace. TripWise ranks 225 destinations using a model trained on 112,000 yes-swipes from real travellers.">
+    <meta property="og:title" content="TripWise · Destination recommender">
+    <meta property="og:description" content="Eight questions, six places. Ranked by a model trained on 38,000 travellers' swipes.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0e1a26">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body>
 
-    <!-- Top Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="brand">
-                <span class="brand-icon">✈️</span>
-                <span class="brand-name brand-text">TripWise</span>
-            </div>
-            <div class="nav-badge">
-                <span class="pulse-dot"></span> ML Ensemble Recommender
-            </div>
-        </div>
-    </nav>
+    <header class="masthead">
+        <a href="/" class="wordmark">TripWise</a>
+        <nav class="masthead-nav">
+            <a href="/" class="masthead-link" aria-current="page">Plan a trip</a>
+            <a href="/how-it-works" class="masthead-link">How it works</a>
+            <button type="button" class="theme-toggle" id="theme-toggle">Light</button>
+        </nav>
+    </header>
 
-    <!-- Main Container -->
-    <main class="container">
+    <main class="page">
 
-        <!-- 1. Hero Landing Section -->
-        <section id="hero-section" class="hero-card">
-            <div class="hero-badge">AI-Powered Vacation Matcher</div>
-            <h1 class="hero-title">Find Your <span class="hero-title-highlight">Perfect Destination</span></h1>
-            <p class="hero-subtitle">
-                Powered by a trained Machine Learning Ensemble on 80,000+ real traveler preferences. 
-                Tell us your style, budget, and dream vibe — we'll match you to the ideal getaway.
+        <section class="intro">
+            <h1><span class="line">Eight questions.</span> <span class="line">Six places worth the flight.</span></h1>
+            <p>
+                Tell us how you like to travel and TripWise ranks 225 destinations by how likely
+                someone like you is to say yes. It learned from 112,321 yes-swipes by 38,826
+                travellers in the Stravl survey.
             </p>
-            
-            <div class="features-row">
-                <div class="feature-item feat-ml">
-                    <div class="feature-icon-wrap">🎯</div>
-                    <div>
-                        <strong>Smart Voting Classifier</strong>
-                        <span>RF + Extra Trees Ensemble</span>
-                    </div>
-                </div>
-                <div class="feature-item feat-globe">
-                    <div class="feature-icon-wrap">🌍</div>
-                    <div>
-                        <strong>Global Coverage</strong>
-                        <span>180+ destinations across 6 continents</span>
-                    </div>
-                </div>
-                <div class="feature-item feat-fast">
-                    <div class="feature-icon-wrap">⚡</div>
-                    <div>
-                        <strong>Instant & Lightweight</strong>
-                        <span>Runs 100% locally on your laptop</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-action">
-                <button id="start-planning-btn" class="cta-btn">
-                    <span>Start Planning Your Trip</span>
-                    <span class="arrow-icon">→</span>
-                </button>
-            </div>
         </section>
 
-        <!-- 2. Preference Form Section -->
-        <section id="form-section" class="form-card hidden">
-            <div class="form-header">
-                <h2>Your Travel Preferences</h2>
-                <p>Customize your criteria to get high-accuracy model predictions.</p>
-            </div>
+        <div class="workspace">
 
-            <form id="travel-form">
-                
-                <!-- Section A: Logistics -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="budget">
-                            <span class="label-icon">💰</span> Budget (Per person / night)
-                        </label>
-                        <select id="budget" name="budget" required class="form-select">
-                            <option value="" disabled selected>Select budget range</option>
-                            <option value="0">$0 - $49 (Budget Friendly)</option>
-                            <option value="1">$50 - $99 (Moderate)</option>
-                            <option value="2">$100 - $249 (Comfort)</option>
-                            <option value="3">$300+ (Luxury / Premium)</option>
-                        </select>
+            <!-- Questionnaire -->
+            <form id="travel-form" class="questions" novalidate>
+
+                <fieldset class="question" data-required>
+                    <legend><span class="q-num">01</span> Budget per person, per night</legend>
+                    <div class="options">
+                        <label class="option"><input type="radio" name="budget" value="0"><span>$0–49</span></label>
+                        <label class="option"><input type="radio" name="budget" value="1"><span>$50–99</span></label>
+                        <label class="option"><input type="radio" name="budget" value="2"><span>$100–249</span></label>
+                        <label class="option"><input type="radio" name="budget" value="3"><span>$300+</span></label>
                     </div>
+                    <p class="q-error">Pick a budget.</p>
+                </fieldset>
 
-                    <div class="form-group">
-                        <label for="season">
-                            <span class="label-icon">🗓️</span> Travel Season
-                        </label>
-                        <select id="season" name="season" required class="form-select">
-                            <option value="" disabled selected>Select season</option>
-                            <option value="0">❄️ Winter</option>
-                            <option value="1">🌸 Spring</option>
-                            <option value="2">☀️ Summer</option>
-                            <option value="3">🍂 Fall</option>
-                        </select>
+                <fieldset class="question" data-required>
+                    <legend><span class="q-num">02</span> When are you going?</legend>
+                    <div class="options">
+                        <label class="option"><input type="radio" name="season" value="0"><span>Winter</span></label>
+                        <label class="option"><input type="radio" name="season" value="1"><span>Spring</span></label>
+                        <label class="option"><input type="radio" name="season" value="2"><span>Summer</span></label>
+                        <label class="option"><input type="radio" name="season" value="3"><span>Fall</span></label>
                     </div>
-                </div>
+                    <p class="q-error">Pick a season.</p>
+                </fieldset>
 
-                <!-- Section B: Pace & Safety -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="activity">
-                            <span class="label-icon">🏃</span> Activity & Pace
-                        </label>
-                        <select id="activity" name="activity" required class="form-select">
-                            <option value="" disabled selected>Select activity level</option>
-                            <option value="0">Chill & Relaxed</option>
-                            <option value="1">Balanced Pace</option>
-                            <option value="2">Active & Adventurous</option>
-                        </select>
+                <fieldset class="question" data-required>
+                    <legend><span class="q-num">03</span> What pace suits you?</legend>
+                    <div class="options">
+                        <label class="option"><input type="radio" name="activity" value="0"><span>Slow and easy</span></label>
+                        <label class="option"><input type="radio" name="activity" value="1"><span>A bit of both</span></label>
+                        <label class="option"><input type="radio" name="activity" value="2"><span>On the move all day</span></label>
                     </div>
+                    <p class="q-error">Pick a pace.</p>
+                </fieldset>
 
-                    <div class="form-group">
-                        <label for="safety">
-                            <span class="label-icon">🛡️</span> Safety Preference
-                        </label>
-                        <select id="safety" name="safety" required class="form-select">
-                            <option value="" disabled selected>Select safety priority</option>
-                            <option value="0">Very Safety Conscious</option>
-                            <option value="1">Balanced Comfort</option>
-                            <option value="2">Ready for Anything / Adventurous</option>
-                        </select>
+                <fieldset class="question" data-required>
+                    <legend><span class="q-num">04</span> How much does safety weigh on you?</legend>
+                    <div class="options">
+                        <label class="option"><input type="radio" name="safety" value="0"><span>A lot</span></label>
+                        <label class="option"><input type="radio" name="safety" value="1"><span>Somewhat</span></label>
+                        <label class="option"><input type="radio" name="safety" value="2"><span>Up for anything</span></label>
                     </div>
-                </div>
+                    <p class="q-error">Pick one.</p>
+                </fieldset>
 
-                <!-- Section C: Experiences -->
-                <div class="form-group">
-                    <label>
-                        <span class="label-icon">✨</span> Desired Experiences <span class="sub-label">(Select all that apply)</span>
-                    </label>
-                    <div class="chips-grid chips-experiences">
-                        <label class="chip"><input type="checkbox" name="experiences" value="0"><span>🏖️ Beach</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="1"><span>🧗 Adventure</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="2"><span>🌲 Nature</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="3"><span>🏛️ Culture</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="4"><span>🎉 Nightlife</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="5"><span>📜 History</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="6"><span>🛍️ Shopping</span></label>
-                        <label class="chip"><input type="checkbox" name="experiences" value="7"><span>🍜 Cuisine</span></label>
+                <fieldset class="question" data-required>
+                    <legend><span class="q-num">05</span> Famous or far from the crowds?</legend>
+                    <div class="options">
+                        <label class="option"><input type="radio" name="popularity" value="0"><span>Off the beaten path</span></label>
+                        <label class="option"><input type="radio" name="popularity" value="1"><span>Classic spots</span></label>
+                        <label class="option"><input type="radio" name="popularity" value="2"><span>Mainstream and trendy</span></label>
                     </div>
-                </div>
+                    <p class="q-error">Pick one.</p>
+                </fieldset>
 
-                <!-- Section D: Scenery -->
-                <div class="form-group">
-                    <label>
-                        <span class="label-icon">🌄</span> Scenery & Landscape <span class="sub-label">(Select all that apply)</span>
-                    </label>
-                    <div class="chips-grid chips-scenery">
-                        <label class="chip"><input type="checkbox" name="scenery" value="0"><span>🏙️ Urban</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="1"><span>🌾 Rural</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="2"><span>🌊 Coast & Sea</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="3"><span>⛰️ Mountain</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="4"><span>⛵ Lake</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="5"><span>🏜️ Desert</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="6"><span>🌿 Plains</span></label>
-                        <label class="chip"><input type="checkbox" name="scenery" value="7"><span>🌴 Jungle</span></label>
+                <fieldset class="question">
+                    <legend><span class="q-num">06</span> What do you want to do there? <span class="q-hint">Pick any</span></legend>
+                    <div class="options">
+                        <label class="option"><input type="checkbox" name="experiences" value="0"><span>Beach</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="1"><span>Adventure</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="2"><span>Nature</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="3"><span>Culture</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="4"><span>Nightlife</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="5"><span>History</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="6"><span>Shopping</span></label>
+                        <label class="option"><input type="checkbox" name="experiences" value="7"><span>Food</span></label>
                     </div>
-                </div>
+                </fieldset>
 
-                <!-- Section E: Region -->
-                <div class="form-group">
-                    <label>
-                        <span class="label-icon">📍</span> Preferred Continents <span class="sub-label">(Optional - leave unselected for anywhere)</span>
-                    </label>
-                    <div class="chips-grid chips-regions">
-                        <label class="chip"><input type="checkbox" name="region" value="a"><span>🌏 Asia</span></label>
-                        <label class="chip"><input type="checkbox" name="region" value="e"><span>🏰 Europe</span></label>
-                        <label class="chip"><input type="checkbox" name="region" value="n"><span>🗽 North America</span></label>
-                        <label class="chip"><input type="checkbox" name="region" value="s"><span>💃 South America</span></label>
-                        <label class="chip"><input type="checkbox" name="region" value="f"><span>🦁 Africa</span></label>
-                        <label class="chip"><input type="checkbox" name="region" value="o"><span>🦘 Oceania</span></label>
+                <fieldset class="question">
+                    <legend><span class="q-num">07</span> What should the view look like? <span class="q-hint">Pick any</span></legend>
+                    <div class="options">
+                        <label class="option"><input type="checkbox" name="scenery" value="0"><span>City</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="1"><span>Countryside</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="2"><span>Sea</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="3"><span>Mountains</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="4"><span>Lakes</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="5"><span>Desert</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="6"><span>Plains</span></label>
+                        <label class="option"><input type="checkbox" name="scenery" value="7"><span>Jungle</span></label>
                     </div>
-                </div>
+                </fieldset>
 
-                <div class="form-footer">
-                    <button type="button" id="back-to-landing-btn" class="secondary-btn">← Back</button>
-                    <button type="submit" id="submit-btn" class="primary-btn">
-                        <span>Find Matching Destinations</span>
-                        <div class="btn-spinner hidden"></div>
-                    </button>
+                <fieldset class="question">
+                    <legend><span class="q-num">08</span> Any continent in mind? <span class="q-hint">Leave blank for anywhere</span></legend>
+                    <div class="options">
+                        <label class="option"><input type="checkbox" name="region" value="e"><span>Europe</span></label>
+                        <label class="option"><input type="checkbox" name="region" value="a"><span>Asia</span></label>
+                        <label class="option"><input type="checkbox" name="region" value="n"><span>North America</span></label>
+                        <label class="option"><input type="checkbox" name="region" value="s"><span>South America</span></label>
+                        <label class="option"><input type="checkbox" name="region" value="f"><span>Africa</span></label>
+                        <label class="option"><input type="checkbox" name="region" value="o"><span>Oceania</span></label>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" id="submit-btn" class="button">Show my shortlist</button>
+                    <button type="reset" class="text-button">Clear answers</button>
                 </div>
             </form>
-        </section>
 
-        <!-- 3. Results Section -->
-        <section id="results-section" class="results-card hidden">
-            <div class="results-top-bar">
+            <!-- Shortlist -->
+            <aside class="shortlist" id="shortlist" aria-live="polite">
+                <h2>Your shortlist</h2>
+                <p id="shortlist-summary" class="shortlist-summary">Answer the first five questions and your six best matches show up here.</p>
+                <ol id="destinations" class="tickets"></ol>
+                <p id="shortlist-note" class="shortlist-note" hidden>
+                    The bar shows fit relative to your top pick. Photos come from Wikipedia.
+                </p>
+            </aside>
+        </div>
+
+        <section id="how-it-works" class="method">
+            <div class="method-text">
+                <h2>How it works</h2>
+                <p>
+                    The <a href="https://github.com/Stravl/Stravl-Data">Stravl survey</a> asked travellers these same
+                    questions, then had them swipe on destinations. TripWise trains a Random Forest and an Extra Trees
+                    model on who said yes to what. The two models vote on all 225 places every time you ask.
+                </p>
+                <p><a href="/how-it-works" class="arrow-link">See the full walkthrough: data, models and evaluation</a></p>
+            </div>
+
+            {% if metrics %}
+            {% set model = metrics.user_level.tripwise_ensemble %}
+            {% set pop = metrics.user_level.popularity_baseline %}
+            {% set rand = metrics.user_level.random_baseline %}
+            <dl class="method-figures">
                 <div>
-                    <span class="match-pill">✨ ML Prediction Results</span>
-                    <h2 class="results-title">Your Top Recommended Destinations</h2>
+                    <dt>Travellers with a liked place in their top 10</dt>
+                    <dd>{{ "%.1f"|format(model['hit_rate@10'] * 100) }}%</dd>
+                    <p>vs {{ "%.1f"|format(pop['hit_rate@10'] * 100) }}% for "most popular" and {{ "%.1f"|format(rand['hit_rate@10'] * 100) }}% for random picks</p>
                 </div>
-                <button id="modify-preferences-btn" class="secondary-btn">
-                    <span>⚙️ Modify Preferences</span>
-                </button>
-            </div>
-
-            <!-- Dynamic Choices Summary Banner -->
-            <div class="summary-banner">
-                <span class="summary-icon">📋</span>
-                <p id="results-summary" class="summary-text"></p>
-            </div>
-
-            <!-- Destinations Grid -->
-            <div id="destinations-container" class="destinations-grid">
-                <!-- Injected dynamically via JS -->
-            </div>
+                <div>
+                    <dt>Tested on</dt>
+                    <dd>{{ "{:,}".format(metrics.n_test_users) }}</dd>
+                    <p>travellers the model never saw in training</p>
+                </div>
+            </dl>
+            {% endif %}
         </section>
-
     </main>
+
+    <footer class="footer">
+        <p>Built by Huzaifa Pathan with Flask and scikit-learn. Survey data from Stravl.</p>
+    </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
