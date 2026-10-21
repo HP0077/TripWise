@@ -2,6 +2,8 @@
 
 **Eight questions. Six places worth the flight.**
 
+**[Try it live → trip-wise-virid.vercel.app](https://trip-wise-virid.vercel.app/)**
+
 TripWise recommends travel destinations. You answer eight quick questions about budget, season, pace and what you enjoy, and a machine-learning model ranks 225 destinations by how likely someone like you is to say yes. It learned from 112,321 yes-swipes by 38,826 real travellers in the [Stravl Travel Preference Dataset](https://github.com/Stravl/Stravl-Data).
 
 ![Answering the questionnaire and getting a shortlist](docs/screenshots/demo.gif)
@@ -110,7 +112,7 @@ python app.py              # then open http://localhost:5000
 
 ## Deploy to Vercel
 
-The repo is ready for Vercel. Import it at [vercel.com](https://vercel.com) under **Add New → Project** and click **Deploy**, with no settings or keys needed. `vercel.json` keeps the app bundle small (about 300 MB of the 500 MB limit), and `public/static/` is served from Vercel's CDN. Render also works using `Procfile` and `render.yaml`.
+The live site runs on Vercel's free plan at [trip-wise-virid.vercel.app](https://trip-wise-virid.vercel.app/). To deploy your own copy, import the repo at [vercel.com](https://vercel.com) under **Add New → Project** and click **Deploy**, with no settings or keys needed. `vercel.json` keeps the app bundle small (about 300 MB of the 500 MB limit), and `public/static/` is served from Vercel's CDN. Render also works using `Procfile` and `render.yaml`.
 
 ## Project structure
 
