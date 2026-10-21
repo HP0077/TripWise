@@ -110,10 +110,6 @@ python app.py              # then open http://localhost:5000
 
 ![TripWise on a phone](docs/screenshots/06-mobile.png)
 
-## Deploy to Vercel
-
-The live site runs on Vercel's free plan at [trip-wise-virid.vercel.app](https://trip-wise-virid.vercel.app/). To deploy your own copy, import the repo at [vercel.com](https://vercel.com) under **Add New → Project** and click **Deploy**, with no settings or keys needed. `vercel.json` keeps the app bundle small (about 300 MB of the 500 MB limit), and `public/static/` is served from Vercel's CDN. Render also works using `Procfile` and `render.yaml`.
-
 ## Project structure
 
 ```
